@@ -3,19 +3,20 @@ import { ref, onMounted } from "vue";
 import NavBar from "./components/NavBar.vue";
 import WordGrid from "./components/WordGrid.vue";
 import VirtualKeyboard from "./components/VirtualKeyboard.vue";
+import Footer from "./components/Footer.vue";
 import { getDailyWord, getRandomWord } from "./words";
 import confetti from "canvas-confetti";
-import Footer from "./components/Footer.vue";
-// Game state
-const grid = ref(
-  Array.from({ length: 6 }, () =>
-    Array.from({ length: 5 }, () => ({
-      letter: "",
-      status: "empty",
-    }))
-  )
-);
 
+// ─── STATE ─────────────────────────────────────
+const grid = ref(createEmptyGrid());
+const secretWord = ref("");
+const currentRow = ref(0);
+const currentCol = ref(0);
+const gameOver = ref(false);
+const keyStatus = ref({});
+const useDailyWord = ref(false); // toggle manually
+
+// ─── NOTIFICATION MODAL ────────────────────────
 const showNotification = ref(false);
 const notificationText = ref("");
 const isWin = ref(false);
@@ -26,14 +27,7 @@ function showResultNotification(message, win) {
   showNotification.value = true;
 }
 
-const secretWord = ref(""); // fallback
-const currentRow = ref(0);
-const currentCol = ref(0);
-const gameOver = ref(false);
-const keyStatus = ref({});
-const useDailyWord = ref(false); // toggle this manually if needed
-
-// 🎉 Confetti celebration
+// ─── CONFETTI ──────────────────────────────────
 function celebrate() {
   confetti({
     particleCount: 150,
@@ -42,7 +36,7 @@ function celebrate() {
   });
 }
 
-// 🟨 Keyboard input handler
+// ─── KEYBOARD PRESS ────────────────────────────
 function onKeyPress(key) {
   if (gameOver.value || currentRow.value >= 6) return;
 
@@ -62,15 +56,14 @@ function onKeyPress(key) {
   }
 }
 
-// ✅ Guess validation
+// ─── GUESS VALIDATION ─────────────────────────
 function validateGuess(guess) {
   const secret = secretWord.value;
   const row = grid.value[currentRow.value];
-
   const secretLetters = secret.split("");
   const guessedLetters = guess.split("");
 
-  // First pass: exact matches
+  // Pass 1: correct letters
   for (let i = 0; i < 5; i++) {
     if (guessedLetters[i] === secretLetters[i]) {
       row[i].status = "correct";
@@ -80,7 +73,7 @@ function validateGuess(guess) {
     }
   }
 
-  // Second pass: misplaced / wrong
+  // Pass 2: misplaced/wrong letters
   for (let i = 0; i < 5; i++) {
     if (guessedLetters[i] && secretLetters.includes(guessedLetters[i])) {
       row[i].status = "misplaced";
@@ -91,11 +84,13 @@ function validateGuess(guess) {
       updateKeyStatus(row[i].letter, "wrong");
     }
   }
+
+  // Result check
   if (guess === secret) {
     gameOver.value = true;
     showResultNotification(getRandomMessage(winMessages), true);
-    celebrate(); // confetti if you want
-  } else if (currentRow.value >= 5) {
+    celebrate();
+  } else if (currentRow.value === 5) {
     gameOver.value = true;
     showResultNotification(
       `${getRandomMessage(failMessages)} The word was: ${secret}`,
@@ -104,11 +99,14 @@ function validateGuess(guess) {
   }
 
   saveProgress();
-  currentRow.value++;
-  currentCol.value = 0;
+
+  if (!gameOver.value) {
+    currentRow.value++;
+    currentCol.value = 0;
+  }
 }
 
-// ⌨️ Update virtual keyboard key color
+// ─── KEYBOARD STATUS ──────────────────────────
 function updateKeyStatus(letter, status) {
   const current = keyStatus.value[letter];
   const priority = { correct: 3, misplaced: 2, wrong: 1 };
@@ -118,32 +116,30 @@ function updateKeyStatus(letter, status) {
   }
 }
 
-// 🔁 Restart game
-function resetGame() {
-  grid.value = Array.from({ length: 6 }, () =>
-    Array.from({ length: 5 }, () => ({
-      letter: "",
-      status: "empty",
-    }))
+// ─── GRID CREATION ────────────────────────────
+function createEmptyGrid() {
+  return Array.from({ length: 6 }, () =>
+    Array.from({ length: 5 }, () => ({ letter: "", status: "empty" }))
   );
+}
 
+// ─── RESET GAME ───────────────────────────────
+function resetGame() {
+  grid.value = createEmptyGrid();
   keyStatus.value = {};
   currentRow.value = 0;
   currentCol.value = 0;
   gameOver.value = false;
 
-  // 💡 get NEW word
-  if (useDailyWord.value) {
-    secretWord.value = getDailyWord();
-  } else {
-    secretWord.value = getRandomWord();
-  }
+  secretWord.value = useDailyWord.value
+    ? getDailyWord()
+    : getRandomWord();
 
-  console.log("🌱 New secret word:", secretWord.value); // ✅ TEST
-  saveProgress(); // optional
+  console.log("🌱 New secret word:", secretWord.value);
+  saveProgress();
 }
 
-// 💾 Save to localStorage
+// ─── LOCAL STORAGE ────────────────────────────
 function saveProgress() {
   const state = {
     grid: grid.value,
@@ -151,10 +147,10 @@ function saveProgress() {
     currentCol: currentCol.value,
     keyStatus: keyStatus.value,
     gameOver: gameOver.value,
-    // secretWord is NOT saved!
   };
   localStorage.setItem("wordleSave", JSON.stringify(state));
 }
+
 function loadProgress() {
   const saved = localStorage.getItem("wordleSave");
   if (saved) {
@@ -164,17 +160,34 @@ function loadProgress() {
     currentCol.value = state.currentCol;
     keyStatus.value = state.keyStatus;
     gameOver.value = state.gameOver;
-    // no need to load secretWord
   }
 }
 
-// 🪄 Initialize game on first load
+// ─── RANDOM MESSAGES ──────────────────────────
+const winMessages = [
+  "You're amazing!",
+  "You did it!",
+  "So clever!",
+  "Crushed it!",
+  "Word master!",
+];
+const failMessages = [
+  "Better luck next time!",
+  "Oof, close one.",
+  "Don't give up!",
+  "Try again!",
+];
+
+function getRandomMessage(arr) {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
+// ─── ON MOUNT ─────────────────────────────────
 onMounted(() => {
-  if (useDailyWord.value) {
-    secretWord.value = getDailyWord();
-  } else {
-    secretWord.value = getRandomWord();
-  }
+  secretWord.value = useDailyWord.value
+    ? getDailyWord()
+    : getRandomWord();
+
   loadProgress();
 });
 </script>
@@ -182,11 +195,9 @@ onMounted(() => {
 <template>
   <div class="min-h-screen bg-black text-white flex flex-col items-center">
     <div class="w-full max-w-md">
-      <NavBar> </NavBar>
+      <NavBar />
 
-      <div
-        class="flex flex-col items-center justify-center h-[calc(100vh-64px)]"
-      >
+      <div class="flex flex-col items-center justify-center h-[calc(100vh-64px)]">
         <WordGrid :grid="grid" />
         <VirtualKeyboard @key-press="onKeyPress" :keyStatus="keyStatus" />
         <button
@@ -212,17 +223,13 @@ onMounted(() => {
       </h2>
       <p class="text-base">{{ notificationText }}</p>
       <button
-        @click="
-          () => {
-            showNotification = false;
-            resetGame();
-          }
-        "
+        @click="() => { showNotification = false; resetGame(); }"
         class="mt-4 px-4 py-2 rounded bg-black text-white font-bold hover:bg-gray-800 transition"
       >
         🔄 Play Again
       </button>
     </div>
   </div>
+
   <Footer />
 </template>
