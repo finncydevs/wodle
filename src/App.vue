@@ -131,9 +131,7 @@ function resetGame() {
   currentCol.value = 0;
   gameOver.value = false;
 
-  secretWord.value = useDailyWord.value
-    ? getDailyWord()
-    : getRandomWord();
+  secretWord.value = useDailyWord.value ? getDailyWord() : getRandomWord();
 
   console.log("🌱 New secret word:", secretWord.value);
   saveProgress();
@@ -184,25 +182,25 @@ function getRandomMessage(arr) {
 
 // ─── ON MOUNT ─────────────────────────────────
 onMounted(() => {
-  secretWord.value = useDailyWord.value
-    ? getDailyWord()
-    : getRandomWord();
+  secretWord.value = useDailyWord.value ? getDailyWord() : getRandomWord();
 
   loadProgress();
 });
 </script>
 
 <template>
-  <div class="min-h-screen bg-black text-white flex flex-col items-center">
+  <div class="min-h-screen bg-black text-slate-300 flex flex-col items-center">
     <div class="w-full max-w-md">
       <NavBar />
 
-      <div class="flex flex-col items-center justify-center h-[calc(100vh-64px)]">
+      <div
+        class="flex flex-col items-center justify-center h-[calc(100vh-64px)]"
+      >
         <WordGrid :grid="grid" />
         <VirtualKeyboard @key-press="onKeyPress" :keyStatus="keyStatus" />
         <button
           @click="resetGame"
-          class="mt-4 px-4 py-2 bg-slate-800 text-slate-400 font-bold rounded hover:bg-slate-600"
+          class="mt-4 px-4 py-2 bg-slate-800 text-slate-300 font-bold rounded hover:bg-slate-600"
         >
           🔄 Restart Game
         </button>
@@ -216,15 +214,20 @@ onMounted(() => {
     class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50"
   >
     <div
-      class="bg-white text-black rounded-xl shadow-lg p-6 max-w-xs w-full text-center space-y-3"
+      class="bg-gray-400 text-black rounded-xl shadow-lg p-6 max-w-xs w-full text-center space-y-3"
     >
       <h2 class="text-2xl font-bold">
         {{ isWin ? "🎉 You Win!" : "💀 Game Over" }}
       </h2>
       <p class="text-base">{{ notificationText }}</p>
       <button
-        @click="() => { showNotification = false; resetGame(); }"
-        class="mt-4 px-4 py-2 rounded bg-black text-white font-bold hover:bg-gray-800 transition"
+        @click="
+          () => {
+            showNotification = false;
+            resetGame();
+          }
+        "
+        class="mt-4 px-4 py-2 rounded bg-black text-slate-300 font-bold hover:bg-gray-800 transition"
       >
         🔄 Play Again
       </button>
