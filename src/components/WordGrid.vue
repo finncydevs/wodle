@@ -8,7 +8,7 @@
         <div
           v-for="(cell, colIndex) in row"
           :key="colIndex"
-          class="w-14 h-14 border-2 border-gray-700 text-white text-2xl flex items-center justify-center font-bold uppercase"
+          class="w-14 h-14 border-2 border-gray-700 text-white text-2xl flex items-center justify-center font-bold rounded-md uppercase"
           :class="{
             'bg-green-600': cell.status === 'correct',
             'bg-yellow-500': cell.status === 'misplaced',
