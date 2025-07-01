@@ -2,7 +2,6 @@
 const { keyStatus } = defineProps({
   keyStatus: Object,
 });
-
 const emit = defineEmits(["key-press"]);
 
 const keys = [
@@ -23,7 +22,7 @@ function getKeyClass(key) {
 </script>
 
 <template>
-  <div class="mt-6 space-y-2 select-none px-1 w-full">
+  <div class="mt-6 space-y-2 select-none px-2 w-full max-w-[min(100vw,400px)] mx-auto">
     <div
       v-for="(row, rowIndex) in keys"
       :key="rowIndex"
@@ -34,12 +33,12 @@ function getKeyClass(key) {
         :key="key"
         @click="emit('key-press', key)"
         :class="[
-          'rounded-md font-semibold text-sm sm:text-base transition duration-100 ease-in-out',
+          'rounded-md font-semibold transition duration-100 ease-in-out',
           'hover:brightness-110 active:scale-95 text-slate-300 flex items-center justify-center',
           getKeyClass(key),
           key === 'ENTER' || key === '←'
-            ? 'px-3 sm:px-4 flex-[1.5] min-w-[48px] sm:min-w-[60px] h-12'
-            : 'flex-1 min-w-[28px] max-w-[40px] sm:max-w-[48px] h-12',
+            ? 'px-2 sm:px-4 flex-[1.5] min-w-[40px] h-12 text-sm sm:text-xxs'
+            : 'flex-1 min-w-[28px] max-w-[40px] sm:max-w-[48px] h-12 text-sm ',
         ]"
       >
         {{ key }}

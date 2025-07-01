@@ -1,27 +1,18 @@
-export const WORDS = [
-  "PLANT",
-  "MOUSE",
-  "STONE",
-  "CLOUD",
-  "GLASS",
-  "SHINE",
-  "SUGAR",
-  "TRAIL",
-  "HEART",
-  "NIGHT",
-  "FRUIT",
-  "LOVER",
-  "CRISP",
-  "GRAPE",
-];
+// src/words.js
+import axios from "axios";
 
-export function getDailyWord() {
-  const index =
-    Math.floor((Date.now() - new Date("2024-01-01")) / (1000 * 60 * 60 * 24)) %
-    WORDS.length;
-  return WORDS[index];
+const BASE_URL = "http://localhost:5000/api/words"; // adjust if deployed
+
+export async function getRandomWord(lang = "en") {
+  try {
+    const res = await axios.get(`${BASE_URL}/random?lang=${lang}`);
+    return res.data.word.toUpperCase(); 
+  } catch (err) {
+    console.error("Failed to fetch word:", err);
+    return "ERROR"; 
+  }
 }
 
-export function getRandomWord() {
-  return WORDS[Math.floor(Math.random() * WORDS.length)];
+export async function getDailyWord(lang = "en") {
+  return await getRandomWord(lang);
 }

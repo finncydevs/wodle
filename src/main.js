@@ -1,6 +1,12 @@
-import './assets/main.css'
+import { createApp } from "vue";
+import App from "./App.vue";
+import router from "./router/router"; // ⬅️ Buat file router/index.js atau .ts
+import "./assets/main.css";
 
-import { createApp } from 'vue'
-import App from './App.vue'
+import Toast from "vue-toastification";
+import "vue-toastification/dist/index.css";
 
-createApp(App).mount('#app')
+const app = createApp(App);
+app.use(router);
+app.mount("#app");
+app.use(Toast);
